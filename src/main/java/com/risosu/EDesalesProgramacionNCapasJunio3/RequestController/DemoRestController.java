@@ -30,6 +30,7 @@ import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Usuario;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.UsuarioDireccion;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.AuthRequest;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.AuthResponse;
+import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.LoginRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -64,6 +65,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -431,6 +433,31 @@ public class DemoRestController {
         }
     }
 
+    @PostMapping("/Login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUserName(),
+                            loginRequest.getPassword()
+                    )
+            );
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String token = jwtService.generateToken(userDetails);
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
+
+            return ResponseEntity.ok(response);
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Usuario o contraseña incorrectos");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error en el servidor: " + ex.getMessage());
+        }
+    }
+
     @Operation(
             summary = "Agrega un nuevo usuario",
             description = "Este endpoint agrega un nuevo usuario junto a una direccion"
@@ -440,30 +467,25 @@ public class DemoRestController {
         @ApiResponse(responseCode = "500", description = "Error al crear el usuario")
     })
     @PostMapping("/Usuario")
-    public ResponseEntity PostUsuarioAll(
+    public ResponseEntity<?> PostUsuarioAll(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Objeto que contiene los datos del usuario y su dirección",
                     required = true)
             @RequestBody UsuarioDireccion usuarioDireccion) {
 
         try {
-            UsuarioDireccion creado
-                    = usuarioService.crearConDirecciones(usuarioDireccion);
+            UsuarioDireccion creado = usuarioService.crearConDirecciones(usuarioDireccion);
 
             Result result = new Result();
             result.objects = List.of(creado);
             result.correct = true;
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(result);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
 
         } catch (Exception ex) {
             Result error = new Result();
             error.correct = false;
             error.errorMessage = ex.getMessage();
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(error);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 

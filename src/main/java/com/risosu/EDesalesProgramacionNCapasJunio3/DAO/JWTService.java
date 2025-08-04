@@ -1,4 +1,5 @@
 package com.risosu.EDesalesProgramacionNCapasJunio3.DAO;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -8,6 +9,9 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Service
 public class JWTService {
@@ -16,14 +20,26 @@ public class JWTService {
 
     private final long expirationTimeMs = 3600000;
 
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+
+        claims.put("roles", userDetails.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList())
+        );
+
+        return generateToken(userDetails.getUsername(), claims); // <- Este método lo defines abajo
+    }
+
     public String generateToken(String username, Map<String, Object> extraClaims) {
         return Jwts.builder()
-                .setClaims(extraClaims) 
-                .setSubject(username) 
-                .setIssuedAt(new Date()) 
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeMs)) 
-                .signWith(secretKey, SignatureAlgorithm.HS256) 
-                .compact(); 
+                .setClaims(extraClaims)
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeMs))
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String extractUsername(String token) {

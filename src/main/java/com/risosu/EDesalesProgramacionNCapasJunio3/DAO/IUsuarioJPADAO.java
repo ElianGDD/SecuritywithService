@@ -17,6 +17,7 @@ public interface IUsuarioJPADAO {
 
     Result GetAll();
     Result GetUsuarioDirecciones(int IdUsuario);
+    Result GetUsuarioByNombre(String Nombre);
     Result GetUsuario(int IdUsuario);
     Result PostDinamico(UsuarioDireccion usuarioDireccion);
     Result PostAll(UsuarioDireccion usuarioDireccion);

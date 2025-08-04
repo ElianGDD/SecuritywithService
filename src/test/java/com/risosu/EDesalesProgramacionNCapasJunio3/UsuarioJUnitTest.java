@@ -12,6 +12,7 @@ import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Roll;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Usuario;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.UsuarioDireccion;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +51,14 @@ public class UsuarioJUnitTest {
         Assertions.assertTrue(result.correct, "Se esperaba que el método GetAll fuera exitoso");
         Assertions.assertNull(result.ex, "No debería haber excepción");
         Assertions.assertNotNull(result.objects, "La lista de objetos no debería ser null");
+    }
+
+    @Test
+    public void testGetUsuarioByNombre_Success() {
+        String username = "Boligrafo";
+        Result result = iUsuarioJPADAOImplementation.GetUsuarioByNombre(username);
+        assertTrue(result.correct);
+        assertNotNull(result.object);
     }
 
     @Test
@@ -102,26 +112,26 @@ public class UsuarioJUnitTest {
 
         UsuarioDireccion usuarioDireccion = new UsuarioDireccion();
         usuarioDireccion.usuario = new Usuario();
-        usuarioDireccion.usuario.setNombre("Test");
-        usuarioDireccion.usuario.setApellidoPaterno("Unitario");
-        usuarioDireccion.usuario.setApellidoMaterno("JUnit");
+        usuarioDireccion.usuario.setNombre("GTest");
+        usuarioDireccion.usuario.setApellidoPaterno("Unitario1");
+        usuarioDireccion.usuario.setApellidoMaterno("JUnit1");
         usuarioDireccion.usuario.setFechaNacimiento(new SimpleDateFormat("yyyy-MM-dd").parse("1990-01-01"));
-        usuarioDireccion.usuario.setUserName("testuser");
-        usuarioDireccion.usuario.setEmail("test@example.com");
-        usuarioDireccion.usuario.setPassword("securepassword123");
+        usuarioDireccion.usuario.setUserName("DesarrolloEG");
+        usuarioDireccion.usuario.setEmail("tessst@example.com");
+        usuarioDireccion.usuario.setPassword("1234");
         usuarioDireccion.usuario.setSexo('M');
-        usuarioDireccion.usuario.setTelefono("5551234567");
-        usuarioDireccion.usuario.setCelular("5559876543");
-        usuarioDireccion.usuario.setCurp("TEST900101HMNXXX01");
+        usuarioDireccion.usuario.setTelefono("55512345321");
+        usuarioDireccion.usuario.setCelular("5559876532");
+        usuarioDireccion.usuario.setCurp("TEST900101HMNXXX12");
 
         usuarioDireccion.usuario.roll = new Roll();
-        usuarioDireccion.usuario.roll.setIdRoll(1);
+        usuarioDireccion.usuario.roll.setIdRoll(2);
         usuarioDireccion.usuario.setImagenPerfil(null);
         usuarioDireccion.usuario.setStatus(1);
 
         usuarioDireccion.Direccion = new Direccion();
-        usuarioDireccion.Direccion.setCalle("Calle Test");
-        usuarioDireccion.Direccion.setNumeroExterior("123");
+        usuarioDireccion.Direccion.setCalle("Calle pruebas");
+        usuarioDireccion.Direccion.setNumeroExterior("222");
         usuarioDireccion.Direccion.setNumeroInterior("000");
 
         Result result = iUsuarioJPADAOImplementation.PostAll(usuarioDireccion);
@@ -154,7 +164,7 @@ public class UsuarioJUnitTest {
             usuario.setCurp("CURP000000" + i);
 
             Roll roll = new Roll();
-            roll.setIdRoll(1); 
+            roll.setIdRoll(1);
             usuario.setRoll(roll);
 
             usuario.setImagenPerfil(null);

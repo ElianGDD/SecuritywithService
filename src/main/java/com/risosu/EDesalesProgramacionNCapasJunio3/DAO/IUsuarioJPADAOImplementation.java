@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -21,6 +23,9 @@ public class IUsuarioJPADAOImplementation implements IUsuarioJPADAO {
 
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    @Lazy
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Result GetAll() {
@@ -183,8 +188,12 @@ public class IUsuarioJPADAOImplementation implements IUsuarioJPADAO {
     public Result PostAll(UsuarioDireccion usuarioDireccion) {
         Result result = new Result();
         try {
+            String rawPassword = usuarioDireccion.usuario.getPassword();
+            String encodedPassword = passwordEncoder.encode(rawPassword);
+            usuarioDireccion.usuario.setPassword(encodedPassword);
 
             entityManager.persist(usuarioDireccion.usuario);
+
             Direccion direccion = usuarioDireccion.Direccion;
             direccion.setUsuario(usuarioDireccion.usuario);
             entityManager.persist(direccion);
@@ -246,7 +255,6 @@ public class IUsuarioJPADAOImplementation implements IUsuarioJPADAO {
         try {
             entityManager.merge(usuarioDireccion.usuario);
 
-
             result.correct = true;
         } catch (Exception ex) {
             result.errorMessage = ex.getLocalizedMessage();
@@ -292,7 +300,7 @@ public class IUsuarioJPADAOImplementation implements IUsuarioJPADAO {
                 Direccion direccionGestionada = entityManager.find(Direccion.class, direccion.getIdDireccion());
                 if (direccionGestionada != null) {
                     entityManager.remove(direccionGestionada);
-                    
+
                 }
             }
 
@@ -303,6 +311,27 @@ public class IUsuarioJPADAOImplementation implements IUsuarioJPADAO {
             result.correct = false;
             result.errorMessage = ex.getLocalizedMessage();
             result.ex = ex;
+        }
+        return result;
+    }
+
+    @Override
+    public Result GetUsuarioByNombre(String Nombre) {
+        Result result = new Result();
+        try {
+            TypedQuery<Usuario> usarioQuery = entityManager.createQuery("FROM Usuario WHERE userName =: username", Usuario.class);
+            usarioQuery.setParameter("username", Nombre);
+            Usuario usarioJPA = usarioQuery.getSingleResult();
+
+            UsuarioDireccion usarioDireccion = new UsuarioDireccion();
+            usarioDireccion.usuario = usarioJPA;
+            result.object = usarioDireccion;
+
+            result.correct = true;
+        } catch (Exception ex) {
+            result.correct = false;
+            result.errorMessage = ex.getLocalizedMessage();
+            result.object = null;
         }
         return result;
     }

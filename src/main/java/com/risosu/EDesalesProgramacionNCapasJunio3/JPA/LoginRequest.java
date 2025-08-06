@@ -4,11 +4,14 @@
  */
 package com.risosu.EDesalesProgramacionNCapasJunio3.JPA;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  *
  * @author Alien 13
  */
 public class LoginRequest {
+    @JsonProperty("userName")
     String userName;
     String password;
 

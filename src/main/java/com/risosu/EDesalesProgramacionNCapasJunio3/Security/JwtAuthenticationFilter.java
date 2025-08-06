@@ -19,12 +19,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JWTService jwtService;
     private final UserDetailsService userDetailsService;
 
-    private static final Set<String> PUBLIC_ENDPOINTS = Set.of(
-            "/demoapi/Login",
-            "/demoapi/Usuario",
-            "/demoapi/CargaMasiva"
-    );
-
+   
     public JwtAuthenticationFilter(JWTService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
@@ -37,10 +32,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        if (PUBLIC_ENDPOINTS.contains(path)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         final String authHeader = request.getHeader("Authorization");
         String token = null;

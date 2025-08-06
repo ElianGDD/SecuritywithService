@@ -114,7 +114,10 @@ public class DemoRestController {
             description = "Este endpoint devuelve una lista de todos los usuarios y sus direcciones registrados en el sistema"
     )
     @GetMapping
-    public ResponseEntity GetAll(Authentication authentication) { 
+    public ResponseEntity GetAll(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Result result = new Result();
 
         try {
@@ -159,7 +162,10 @@ public class DemoRestController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/Usuario")
-    public ResponseEntity GetUsuario(@RequestParam int IdUsuario) {
+    public ResponseEntity GetUsuario(@RequestParam int IdUsuario, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Result result = new Result();
 
         try {

@@ -14,6 +14,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.risosu.EDesalesProgramacionNCapasJunio3.Security.JwtAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+// ...
+
 @Configuration
 @EnableWebSecurity
 public class ServiceSecurityConfig {
@@ -21,15 +26,24 @@ public class ServiceSecurityConfig {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Autowired
+    private JWTService jwtService;
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService, userDetailsService);
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/demoapi/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/demoapi").permitAll()
                 .anyRequest().authenticated()
-                );
+            )
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -38,8 +52,8 @@ public class ServiceSecurityConfig {
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authBuilder
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
+            .userDetailsService(userDetailsService)
+            .passwordEncoder(passwordEncoder());
         return authBuilder.build();
     }
 

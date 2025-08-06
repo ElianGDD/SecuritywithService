@@ -2,6 +2,7 @@ package com.risosu.EDesalesProgramacionNCapasJunio3.DAO;
 
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Colonia;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Direccion;
+import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.LoginRequest;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Roll;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Usuario;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Result;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
@@ -26,6 +29,8 @@ public class IUsuarioJPADAOImplementation implements IUsuarioJPADAO {
     @Autowired
     @Lazy
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    JWTService jwtService;
 
     @Override
     public Result GetAll() {
@@ -333,6 +338,33 @@ public class IUsuarioJPADAOImplementation implements IUsuarioJPADAO {
             result.errorMessage = ex.getLocalizedMessage();
             result.object = null;
         }
+        return result;
+    }
+
+    @Override
+    public Result Login(LoginRequest loginRequest) {
+        Result result = new Result();
+        try {
+            TypedQuery<Usuario> usarioQuery = entityManager.createQuery("FROM Usuario WHERE userName =: username", Usuario.class);
+            usarioQuery.setParameter("username", loginRequest.getUserName());
+
+            Usuario usuario = usarioQuery.getSingleResult();
+
+            if (usuario == null || !passwordEncoder.matches(loginRequest.getPassword(), usuario.getPassword())) {
+                result.correct = false;
+                result.errorMessage = "Usuario o contraseña incorrectos";
+                return result;
+            }
+
+            result.object = usuario;
+            result.correct = true;
+
+        } catch (Exception ex) {
+            result.correct = false;
+            result.ex = ex;
+            result.errorMessage = ex.getLocalizedMessage();
+        }
+
         return result;
     }
 

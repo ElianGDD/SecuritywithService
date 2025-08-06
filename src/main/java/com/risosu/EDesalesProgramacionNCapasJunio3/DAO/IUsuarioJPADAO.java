@@ -4,10 +4,12 @@
  */
 package com.risosu.EDesalesProgramacionNCapasJunio3.DAO;
 
+import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.LoginRequest;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Result;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Usuario;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.UsuarioDireccion;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
 
 /**
  *
@@ -22,6 +24,7 @@ public interface IUsuarioJPADAO {
     Result PostDinamico(UsuarioDireccion usuarioDireccion);
     Result PostAll(UsuarioDireccion usuarioDireccion);
     Result PostCargaMasiva(List<UsuarioDireccion>usuariosDireccions);
+    Result Login(LoginRequest loginRequest);
     Result PutUsuario(UsuarioDireccion usuarioDireccion);
     Result PutAll(UsuarioDireccion usuarioDireccion);
     Result PutStatus(UsuarioDireccion usuarioDireccion);

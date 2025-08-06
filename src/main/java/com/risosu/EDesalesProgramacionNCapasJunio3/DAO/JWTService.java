@@ -1,40 +1,37 @@
 package com.risosu.EDesalesProgramacionNCapasJunio3.DAO;
 
+import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Usuario;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 @Service
 public class JWTService {
 
     private final Key secretKey = Keys.hmacShaKeyFor("clave_secretisima_y_larga_123456".getBytes());
-
     private final long expirationTimeMs = 3600000;
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
         Map<String, Object> claims = new HashMap<>();
 
-        claims.put("roles", userDetails.getAuthorities()
-                .stream()
+        List<String> roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList())
-        );
+                .collect(Collectors.toList());
 
-        return generateToken(userDetails.getUsername(), claims); // <- Este método lo defines abajo
-    }
+        claims.put("roles", roles);
 
-    public String generateToken(String username, Map<String, Object> extraClaims) {
         return Jwts.builder()
-                .setClaims(extraClaims)
+                .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTimeMs))

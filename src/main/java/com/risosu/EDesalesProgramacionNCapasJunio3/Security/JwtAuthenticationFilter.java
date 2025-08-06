@@ -37,13 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // Permitir acceso sin token a endpoints públicos exactos
         if (PUBLIC_ENDPOINTS.contains(path)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Validar JWT
         final String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;

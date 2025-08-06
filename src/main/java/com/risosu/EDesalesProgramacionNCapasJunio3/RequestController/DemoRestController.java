@@ -28,7 +28,6 @@ import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.ResultValidarDatos;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Roll;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.Usuario;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.UsuarioDireccion;
-import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.AuthRequest;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.AuthResponse;
 import com.risosu.EDesalesProgramacionNCapasJunio3.JPA.LoginRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +35,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,25 +42,13 @@ import java.io.FileReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.xmlbeans.impl.xb.xsdschema.Attribute;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -71,16 +57,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Usuario", description = "Operaciones relacionadas con usuarios y direcciones")
@@ -131,10 +114,14 @@ public class DemoRestController {
             description = "Este endpoint devuelve una lista de todos los usuarios y sus direcciones registrados en el sistema"
     )
     @GetMapping
-    public ResponseEntity GetAll() {
+    public ResponseEntity GetAll(Authentication authentication) { 
         Result result = new Result();
 
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
             List<Usuario> usuarios = usuarioJPAREPOSITORYDAO.findAll();
             List<UsuarioDireccion> resultados = new ArrayList<>();
 
@@ -430,31 +417,6 @@ public class DemoRestController {
             result.errorMessage = ex.getLocalizedMessage();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
 
-        }
-    }
-
-    @PostMapping("/Login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUserName(),
-                            loginRequest.getPassword()
-                    )
-            );
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = jwtService.generateToken(userDetails);
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-
-            return ResponseEntity.ok(response);
-
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Usuario o contraseña incorrectos");
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error en el servidor: " + ex.getMessage());
         }
     }
 
@@ -758,25 +720,22 @@ public class DemoRestController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity login(@RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            authRequest.getNombre(),
-                            authRequest.getPassword()
-                    )
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUserName(), loginRequest.getPassword())
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("role", userDetails.getAuthorities());
-
-            String token = jwtService.generateToken(userDetails.getUsername(), claims);
+            String token = jwtService.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
 
             return ResponseEntity.ok(new AuthResponse(token));
-        } catch (Exception ex) {
+
+        } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales inválidas");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error del servidor");
         }
     }
 
